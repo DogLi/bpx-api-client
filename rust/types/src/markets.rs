@@ -29,25 +29,25 @@ pub struct Market {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MarketFilters {
-    price: PriceFilters,
-    quantity: QuantityFilters,
-    leverage: Option<LeverageFilters>,
+    pub price: PriceFilters,
+    pub quantity: QuantityFilters,
+    pub leverage: Option<LeverageFilters>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PriceFilters {
-    min_price: Decimal,
-    max_price: Option<Decimal>,
-    tick_size: Decimal,
+    pub min_price: Decimal,
+    pub max_price: Option<Decimal>,
+    pub tick_size: Decimal,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QuantityFilters {
-    min_quantity: Decimal,
-    max_quantity: Option<Decimal>,
-    step_size: Decimal,
+    pub min_quantity: Decimal,
+    pub max_quantity: Option<Decimal>,
+    pub step_size: Decimal,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -12,6 +12,7 @@ pub mod error;
 pub mod markets;
 pub mod order;
 pub mod trades;
+pub mod ws;
 
 const SIGNING_WINDOW: u32 = 5000;
 
@@ -43,8 +44,9 @@ impl AsRef<reqwest::Client> for BpxClient {
     }
 }
 
+const API_BASE: &str = "https://api.backpack.exchange";
 impl BpxClient {
-    pub fn init(base_url: String, api_key: &str, api_secret: &str) -> Result<Self> {
+    pub fn init(api_key: &str, api_secret: &str) -> Result<Self> {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert("X-API-Key", api_key.parse()?);
         headers.insert(CONTENT_TYPE, "application/json; charset=utf-8".parse()?);
@@ -65,7 +67,7 @@ impl BpxClient {
         Ok(BpxClient {
             verifier,
             signer,
-            base_url,
+            base_url: API_BASE.to_string(),
             client,
         })
     }

@@ -10,9 +10,15 @@ description = "Rust client for Backpack Exchange"
 base64 = { workspace = true }
 bpx-api-types = { version = "0.1.1", path = "../types" }
 ed25519-dalek = { workspace = true }
+futures = "0.3"
+pin-project = "1.1"
 reqwest = { workspace = true }
 rust_decimal = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = "0.21"
 tracing = { workspace = true }
+tungstenite = "0.21.0"
+url = "2.5.0"

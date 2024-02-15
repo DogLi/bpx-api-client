@@ -8,6 +8,12 @@ pub enum Error {
     #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
 
+    #[error(transparent)]
+    ConnectError(#[from] tokio_tungstenite::tungstenite::Error),
+
+    #[error("{0}")]
+    ParseError(String),
+
     #[error("Invalid URL: {0}")]
     UrlParseError(String),
 
@@ -28,4 +34,10 @@ pub enum Error {
 
     #[error("Invalid request: {0}")]
     InvalidRequest(String),
+
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
+
+    #[error("websocket closed")]
+    WebsocketClosed,
 }
