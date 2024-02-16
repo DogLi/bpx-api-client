@@ -1,7 +1,7 @@
 use crate::Error;
 use base64::engine::general_purpose::STANDARD;
 use base64::Engine;
-use bpx_api_types::order::OrderInfo;
+use bpx_api_types::ws_response::WsStream;
 use ed25519_dalek::{Signature, Signer, SigningKey};
 use futures::{Sink, SinkExt, Stream};
 use pin_project::pin_project;
@@ -14,7 +14,7 @@ use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 use tungstenite::protocol::Message as WSMessage;
 use url::Url;
 
-const WSS_URL: &str = "wss://ws.backpack.exchange/stream";
+const WSS_URL: &str = "wss://ws.backpack.exchange";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Credential {
@@ -61,7 +61,7 @@ impl BpWebsocket {
         let signature = STANDARD.encode(signature.to_bytes());
 
         // Subscribe to the depth stream.
-        let cmd = Command::Subscribe {
+        let cmd = Command::Login {
             method: "SUBSCRIBE".into(),
             params: vec!["stream".into()],
             signature: vec![
@@ -78,12 +78,35 @@ impl BpWebsocket {
 
 #[derive(Debug, Serialize)]
 pub enum Command {
-    Subscribe {
+    Login {
         method: String,
         params: Vec<String>,
         signature: Vec<String>,
     },
-    Ping,
+    Subscribe {
+        method: String,
+        params: Vec<String>,
+    },
+    Unsubscribe {
+        method: String,
+        params: Vec<String>,
+    },
+    Pong(Vec<u8>),
+}
+
+impl Command {
+    pub fn subscribe(params: Vec<String>) -> Self {
+        Self::Subscribe {
+            method: "SUBSCRIBE".into(),
+            params,
+        }
+    }
+    pub fn unsubscribe(params: Vec<String>) -> Self {
+        Self::Unsubscribe {
+            method: "UNSUBSCRIBE".into(),
+            params,
+        }
+    }
 }
 
 impl Sink<Command> for BpWebsocket {
@@ -97,10 +120,13 @@ impl Sink<Command> for BpWebsocket {
     fn start_send(self: Pin<&mut Self>, item: Command) -> Result<(), Self::Error> {
         let this = self.project();
         let command = match &item {
-            &Command::Ping => "ping".to_string(),
-            command => serde_json::to_string(command)?,
+            Command::Pong(data) => WSMessage::Pong(data.clone()),
+            command => {
+                let cmd = serde_json::to_string(command)?;
+                WSMessage::Text(cmd)
+            }
         };
-        Ok(this.inner.start_send(WSMessage::Text(command))?)
+        Ok(this.inner.start_send(command)?)
     }
 
     fn poll_flush(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Result<(), Self::Error>> {
@@ -133,23 +159,31 @@ impl Stream for BpWebsocket {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct ErrorResp {
+    pub code: u64,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub enum Message {
-    Pong,
-    Order(OrderInfo),
+    Ping(Vec<u8>),
+    WsStream(Box<WsStream>),
+    Error { id: Option<i64>, error: String },
 }
 
 fn parse_message(msg: WSMessage) -> Result<Message, Error> {
     match msg {
-        WSMessage::Text(message) => match message.as_str() {
-            "pong" => Ok(Message::Pong),
-            others => match serde_json::from_str(others) {
+        WSMessage::Text(message) => {
+            let others = message.as_str();
+            match serde_json::from_str(others) {
                 Ok(r) => Ok(r),
                 Err(_) => Err(Error::ParseError(format!(
                     "Cannot deserialize message from '{}'",
                     others
                 ))),
-            },
-        },
+            }
+        }
+        WSMessage::Ping(data) => Ok(Message::Ping(data)),
         WSMessage::Close(_) => Err(Error::WebsocketClosed),
         _ => unreachable!("Got unsupport websocket message type"),
     }

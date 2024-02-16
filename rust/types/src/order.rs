@@ -97,15 +97,6 @@ pub enum OrderStatus {
     Triggered,
 }
 
-#[derive(Debug, Display, Clone, Copy, Serialize, Deserialize, EnumString, PartialEq, Eq, Hash)]
-#[serde(rename_all = "camelCase")]
-pub enum OrderEvent {
-    OrderCancelled,
-    OrderExpired,
-    OrderFill,
-    OrderAccepted,
-}
-
 #[derive(
     Debug, Display, Clone, Copy, Serialize, Deserialize, Default, EnumString, PartialEq, Eq, Hash,
 )]
@@ -155,53 +146,4 @@ pub struct CancelOrderPayload {
 #[serde(rename_all = "camelCase")]
 pub struct CancelOpenOrdersPayload {
     pub symbol: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct OrderInfo {
-    #[serde(alias = "e")]
-    event: OrderEvent,
-    #[serde(alias = "E")]
-    event_time: i64,
-    #[serde(alias = "s")]
-    symbol: String,
-    #[serde(alias = "c")]
-    client_order_id: String,
-    #[serde(alias = "S")]
-    side: Side,
-    #[serde(alias = "o")]
-    order_type: OrderType,
-    #[serde(alias = "f")]
-    time_in_force: TimeInForce,
-    #[serde(alias = "q")]
-    qty: Decimal,
-    #[serde(alias = "Q")]
-    qty_in_quote: Decimal,
-    #[serde(alias = "p")]
-    price: Decimal,
-    #[serde(alias = "P")]
-    trigger_price: Decimal,
-    #[serde(alias = "X")]
-    order_state: OrderStatus,
-    #[serde(alias = "i")]
-    order_id: String,
-    #[serde(alias = "l")]
-    filled_qty: String,
-    #[serde(alias = "z")]
-    executed_qty: Decimal,
-    #[serde(alias = "Z")]
-    exec_qty_in_quote: Decimal,
-    #[serde(alias = "L")]
-    filled_price: Decimal,
-    #[serde(alias = "m")]
-    is_maker: bool,
-    #[serde(alias = "n")]
-    fee: Decimal,
-    #[serde(alias = "N")]
-    fee_symbol: String,
-    #[serde(alias = "V")]
-    self_trade_prevention: SelfTradePrevention,
-    #[serde(alias = "T")]
-    timestamp: i64,
 }
