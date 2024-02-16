@@ -67,6 +67,7 @@ pub enum PublicEvent {
     Trade,
     Ticker,
     Kline,
+    Depth,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -94,7 +95,28 @@ pub struct TraderStream {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct DepthStream {
+    #[serde(alias = "e")]
+    pub event: PublicEvent,
+    #[serde(alias = "E")]
+    pub timestamp: i64,
+    #[serde(alias = "s")]
+    pub symbol: String,
+    #[serde(alias = "a")]
+    pub asks: Vec<Vec<Decimal>>,
+    #[serde(alias = "b")]
+    pub bids: Vec<Vec<Decimal>>,
+    #[serde(alias = "U")]
+    pub first_update_id: u64,
+    #[serde(alias = "u")]
+    pub final_update_id: u64,
+    #[serde(alias = "T")]
+    pub engine_time: i64,
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub enum WsStream {
+    Depth(DepthStream),
     OrderUpdate(OrderUpdateStream),
     Trader(TraderStream),
 }
