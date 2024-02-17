@@ -6,18 +6,13 @@ use bpx_api_types::{
     Blockchain,
 };
 
-use crate::{BpxClient, Error};
+use crate::BpxClient;
 
 impl BpxClient {
     pub async fn get_balances(&self) -> Result<HashMap<String, Balance>> {
         let url = format!("{}/api/v1/capital", self.base_url);
         let res = self.get(url).await?;
-        let text = res.text().await?;
-        if text.contains('{') {
-            Ok(serde_json::from_str(&text).unwrap())
-        } else {
-            Err(Error::ResponseError(text))
-        }
+        Self::handle_response(res).await
     }
 
     pub async fn get_deposits(
@@ -32,7 +27,7 @@ impl BpxClient {
             }
         }
         let res = self.get(url).await?;
-        res.json().await.map_err(Into::into)
+        Self::handle_response(res).await
     }
 
     pub async fn get_deposit_address(&self, blockchain: Blockchain) -> Result<DepositAddress> {
@@ -41,7 +36,7 @@ impl BpxClient {
             self.base_url, blockchain
         );
         let res = self.get(url).await?;
-        res.json().await.map_err(Into::into)
+        Self::handle_response(res).await
     }
 
     pub async fn get_withdrawals(
@@ -56,7 +51,7 @@ impl BpxClient {
             }
         }
         let res = self.get(url).await?;
-        res.json().await.map_err(Into::into)
+        Self::handle_response(res).await
     }
 
     pub async fn request_withdrawal(&self, payload: RequestWithdrawalPayload) -> Result<()> {

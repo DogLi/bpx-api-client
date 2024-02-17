@@ -10,7 +10,7 @@ impl BpxClient {
             url.push_str(&format!("&limit={}", limit));
         }
         let res = self.get(url).await?;
-        res.json().await.map_err(Into::into)
+        Self::handle_response(res).await
     }
 
     pub async fn get_historical_trades(
@@ -26,6 +26,6 @@ impl BpxClient {
             }
         }
         let res = self.get(url).await?;
-        res.json().await.map_err(Into::into)
+        Self::handle_response(res).await
     }
 }

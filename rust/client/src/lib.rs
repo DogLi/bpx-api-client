@@ -3,6 +3,7 @@ use chrono::Utc;
 use ed25519_dalek::{Signature, Signer, SigningKey, VerifyingKey};
 pub use error::{Error, Result};
 use reqwest::{header::CONTENT_TYPE, IntoUrl, Method, Request, Response};
+use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::collections::BTreeMap;
 
@@ -143,5 +144,14 @@ impl BpxClient {
         let mut req = self.client.delete(url).json(&payload).build()?;
         self.sign(&mut req)?;
         self.client.execute(req).await.map_err(Error::from)
+    }
+
+    async fn handle_response<C: DeserializeOwned>(res: Response) -> Result<C> {
+        if res.status().is_success() {
+            res.json().await.map_err(Into::into)
+        } else {
+            let text = res.text().await?;
+            Err(Error::ResponseError(text))
+        }
     }
 }
