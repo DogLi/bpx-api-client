@@ -167,7 +167,7 @@ pub struct ErrorResp {
 #[derive(Debug, Clone, Deserialize)]
 pub enum Message {
     Ping(Vec<u8>),
-    WsStream(WsStream),
+    WsStream(Box<WsStream>),
     Error { id: Option<i64>, error: String },
 }
 
