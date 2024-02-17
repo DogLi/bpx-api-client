@@ -6,13 +6,18 @@ use bpx_api_types::{
     Blockchain,
 };
 
-use crate::BpxClient;
+use crate::{BpxClient, Error};
 
 impl BpxClient {
     pub async fn get_balances(&self) -> Result<HashMap<String, Balance>> {
         let url = format!("{}/api/v1/capital", self.base_url);
         let res = self.get(url).await?;
-        res.json().await.map_err(Into::into)
+        let text = res.text().await?;
+        if text.contains('{') {
+            Ok(serde_json::from_str(&text).unwrap())
+        } else {
+            Err(Error::ResponseError(text))
+        }
     }
 
     pub async fn get_deposits(
@@ -57,5 +62,19 @@ impl BpxClient {
     pub async fn request_withdrawal(&self, payload: RequestWithdrawalPayload) -> Result<()> {
         let endpoint = format!("{}/wapi/v1/capital/withdrawals", self.base_url);
         self.post(endpoint, payload).await.map(|_| ())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_get_balances() {
+        let api_key = "jDh8SSOiDcwhrcEurUWnKuBgeYDS4wBBIZ8uquoJ0Q8=";
+        let secret_key = "W5hZ57pzJza1QGqZyu+y0N+cwvKome4rsLE3rdJ1S/c=";
+        let client = BpxClient::init(api_key, secret_key).unwrap();
+        let balances = client.get_balances().await.unwrap();
+        println!("{balances:?}");
     }
 }

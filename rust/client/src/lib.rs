@@ -1,4 +1,5 @@
 use base64::{engine::general_purpose::STANDARD, Engine};
+use chrono::Utc;
 use ed25519_dalek::{Signature, Signer, SigningKey, VerifyingKey};
 pub use error::{Error, Result};
 use reqwest::{header::CONTENT_TYPE, IntoUrl, Method, Request, Response};
@@ -14,7 +15,7 @@ pub mod order;
 pub mod trades;
 pub mod ws;
 
-const SIGNING_WINDOW: u32 = 5000;
+const SIGNING_WINDOW: u32 = 30000;
 
 #[derive(Debug, Clone)]
 pub struct BpxClient {
@@ -89,10 +90,7 @@ impl BpxClient {
             _ => return Ok(()), // other endpoints don't require signing
         };
 
-        let timestamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)?
-            .as_millis();
-
+        let timestamp = Utc::now().timestamp_millis();
         let query_params = req
             .url()
             .query_pairs()
@@ -126,31 +124,23 @@ impl BpxClient {
             .insert("X-Window", SIGNING_WINDOW.to_string().parse()?);
         req.headers_mut().insert("X-Signature", signature.parse()?);
 
-        if matches!(req.method(), &Method::POST | &Method::DELETE) {
-            req.headers_mut()
-                .insert(CONTENT_TYPE, "application/json; charset=utf-8".parse()?);
-        }
-
         Ok(())
     }
 
     pub async fn get<U: IntoUrl>(&self, url: U) -> Result<Response> {
         let mut req = self.client.get(url).build()?;
-        tracing::debug!("req: {:?}", req);
         self.sign(&mut req)?;
         self.client.execute(req).await.map_err(Error::from)
     }
 
     pub async fn post<P: Serialize, U: IntoUrl>(&self, url: U, payload: P) -> Result<Response> {
         let mut req = self.client.post(url).json(&payload).build()?;
-        tracing::debug!("req: {:?}", req);
         self.sign(&mut req)?;
         self.client.execute(req).await.map_err(Error::from)
     }
 
     pub async fn delete<P: Serialize, U: IntoUrl>(&self, url: U, payload: P) -> Result<Response> {
         let mut req = self.client.delete(url).json(&payload).build()?;
-        tracing::debug!("req: {:?}", req);
         self.sign(&mut req)?;
         self.client.execute(req).await.map_err(Error::from)
     }

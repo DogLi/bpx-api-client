@@ -47,7 +47,12 @@ impl BpxClient {
         };
 
         let res = self.delete(url, payload).await?;
-        res.json().await.map_err(Into::into)
+        let text = res.text().await?;
+        if text.contains('{') {
+            Ok(serde_json::from_str(&text).unwrap())
+        } else {
+            Err(Error::ResponseError(text))
+        }
     }
 
     pub async fn get_open_orders(&self, symbol: Option<&str>) -> Result<Vec<Order>> {
@@ -62,6 +67,11 @@ impl BpxClient {
     pub async fn cancel_open_orders(&self, payload: CancelOpenOrdersPayload) -> Result<Vec<Order>> {
         let url = format!("{}/api/v1/orders", self.base_url);
         let res = self.delete(url, payload).await?;
-        res.json().await.map_err(Into::into)
+        let text = res.text().await?;
+        if text.contains('[') {
+            Ok(serde_json::from_str(&text).unwrap())
+        } else {
+            Err(Error::ResponseError(text))
+        }
     }
 }

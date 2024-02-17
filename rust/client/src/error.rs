@@ -40,4 +40,7 @@ pub enum Error {
 
     #[error("websocket closed")]
     WebsocketClosed,
+
+    #[error("response error: {0}")]
+    ResponseError(String),
 }

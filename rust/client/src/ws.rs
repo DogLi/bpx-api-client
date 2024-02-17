@@ -171,10 +171,7 @@ pub struct ErrorResp {
 #[serde(untagged)]
 pub enum Message {
     Ping(Vec<u8>),
-    WsStream {
-      stream: String,
-      data: WsStream,
-    },
+    WsStream { stream: String, data: WsStream },
     Error { id: Option<i64>, error: ErrorResp },
 }
 

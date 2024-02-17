@@ -9,6 +9,7 @@ description = "Rust client for Backpack Exchange"
 [dependencies]
 base64 = { workspace = true }
 bpx-api-types = { version = "0.1.1", path = "../types" }
+chrono = { version = "0.4" }
 ed25519-dalek = { workspace = true }
 futures = "0.3"
 pin-project = "1.1"
