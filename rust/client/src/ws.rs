@@ -39,9 +39,11 @@ impl BpWebsocket {
         })
     }
 
-    pub async fn new_with_credential(credential: Credential) -> Result<Self, Error> {
-        let mut client = Self::new_impl(Some(credential.clone())).await?;
-        client.login().await?;
+    pub async fn new(credential: Option<Credential>) -> Result<Self, Error> {
+        let mut client = Self::new_impl(credential.clone()).await?;
+        if credential.is_some() {
+            client.login().await?;
+        }
         Ok(client)
     }
 
@@ -77,6 +79,7 @@ impl BpWebsocket {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(untagged)]
 pub enum Command {
     Login {
         method: String,
@@ -165,10 +168,14 @@ pub struct ErrorResp {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+#[serde(untagged)]
 pub enum Message {
     Ping(Vec<u8>),
-    WsStream(Box<WsStream>),
-    Error { id: Option<i64>, error: String },
+    WsStream {
+      stream: String,
+      data: WsStream,
+    },
+    Error { id: Option<i64>, error: ErrorResp },
 }
 
 fn parse_message(msg: WSMessage) -> Result<Message, Error> {

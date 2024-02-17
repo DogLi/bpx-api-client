@@ -115,6 +115,7 @@ pub struct DepthStream {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+#[serde(untagged)]
 pub enum WsStream {
     Depth(DepthStream),
     OrderUpdate(OrderUpdateStream),
