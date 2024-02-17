@@ -2,6 +2,7 @@ use crate::Error;
 use base64::engine::general_purpose::STANDARD;
 use base64::Engine;
 use bpx_api_types::ws_response::WsStream;
+use chrono::Utc;
 use ed25519_dalek::{Signature, Signer, SigningKey};
 use futures::{Sink, SinkExt, Stream};
 use pin_project::pin_project;
@@ -43,6 +44,7 @@ impl BpWebsocket {
         let mut client = Self::new_impl(credential.clone()).await?;
         if credential.is_some() {
             client.login().await?;
+            info!("websocket login success");
         }
         Ok(client)
     }
@@ -54,9 +56,7 @@ impl BpWebsocket {
             .try_into()
             .map_err(|_| Error::SecretKey)?;
         let signer = SigningKey::from_bytes(&api_secret);
-        let timestamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)?
-            .as_millis();
+        let timestamp = Utc::now().timestamp_millis();
         let window = 5000;
         let signee = format!("instruction=subscribe&timestamp={timestamp}&window={window}");
         let signature: Signature = signer.sign(signee.as_bytes());
@@ -65,7 +65,7 @@ impl BpWebsocket {
         // Subscribe to the depth stream.
         let cmd = Command::Login {
             method: "SUBSCRIBE".into(),
-            params: vec!["stream".into()],
+            params: vec!["account.orderUpdate".into()],
             signature: vec![
                 credential.api_key.clone(),
                 signature,
@@ -126,6 +126,7 @@ impl Sink<Command> for BpWebsocket {
             Command::Pong(data) => WSMessage::Pong(data.clone()),
             command => {
                 let cmd = serde_json::to_string(command)?;
+                info!("send to ws: {cmd}");
                 WSMessage::Text(cmd)
             }
         };

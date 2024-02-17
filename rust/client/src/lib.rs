@@ -1,3 +1,5 @@
+#[macro_use]
+extern crate log;
 use base64::{engine::general_purpose::STANDARD, Engine};
 use chrono::Utc;
 use ed25519_dalek::{Signature, Signer, SigningKey, VerifyingKey};
@@ -114,7 +116,7 @@ impl BpxClient {
             signee.push_str(&format!("&{k}={v}"));
         }
         signee.push_str(&format!("&timestamp={timestamp}&window={SIGNING_WINDOW}"));
-        tracing::debug!("signee: {}", signee);
+        debug!("signee: {}", signee);
 
         let signature: Signature = self.signer.sign(signee.as_bytes());
         let signature = STANDARD.encode(signature.to_bytes());

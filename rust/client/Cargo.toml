@@ -19,7 +19,9 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 tokio = { version = "1", features = ["full"] }
-tokio-tungstenite = "0.21"
-tracing = { workspace = true }
+tokio-tungstenite = { version = "0.21", features = [
+    "rustls-tls-native-roots",
+] }
+log = { workspace = true }
 tungstenite = "0.21.0"
 url = "2.5.0"
