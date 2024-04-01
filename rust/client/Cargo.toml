@@ -25,3 +25,4 @@ tokio-tungstenite = { version = "0.21", features = [
 log = { workspace = true }
 tungstenite = "0.21.0"
 url = "2.5.0"
+

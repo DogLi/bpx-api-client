@@ -46,7 +46,9 @@ pub struct LimitOrder {
 #[serde(rename_all = "PascalCase")]
 pub enum OrderType {
     #[default]
+    #[serde(alias = "LIMIT")]
     Limit,
+    #[serde(alias = "MARKET")]
     Market,
 }
 
@@ -104,8 +106,10 @@ pub enum OrderStatus {
 #[serde(rename_all = "PascalCase")]
 pub enum Side {
     #[default]
-    Bid,
-    Ask,
+    #[serde(rename = "Bid")]
+    Buy,
+    #[serde(rename = "Ask")]
+    Sell,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

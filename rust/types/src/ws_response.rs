@@ -12,6 +12,7 @@ pub enum OrderEvent {
     OrderAccepted,
 }
 
+// {"data":,"stream":"account.orderUpdate"}
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderUpdateStream {
@@ -21,40 +22,40 @@ pub struct OrderUpdateStream {
     pub event_time: i64,
     #[serde(alias = "s")]
     pub symbol: String,
-    #[serde(alias = "c")]
-    pub client_order_id: String,
+    #[serde(alias = "c", default)]
+    pub client_order_id: Option<String>,
     #[serde(alias = "S")]
     pub side: Side,
     #[serde(alias = "o")]
     pub order_type: OrderType,
     #[serde(alias = "f")]
     pub time_in_force: TimeInForce,
-    #[serde(alias = "q")]
-    pub qty: Decimal,
-    #[serde(alias = "Q")]
-    pub qty_in_quote: Decimal,
-    #[serde(alias = "p")]
-    pub price: Decimal,
-    #[serde(alias = "P")]
-    pub trigger_price: Decimal,
+    #[serde(alias = "q", default)]
+    pub qty: Option<Decimal>,
+    #[serde(alias = "Q", default)]
+    pub qty_in_quote: Option<Decimal>,
+    #[serde(alias = "p", default)]
+    pub price: Option<Decimal>,
+    #[serde(alias = "P", default)]
+    pub trigger_price: Option<Decimal>,
     #[serde(alias = "X")]
     pub order_state: OrderStatus,
     #[serde(alias = "i")]
     pub order_id: String,
-    #[serde(alias = "l")]
-    pub filled_qty: String,
+    #[serde(alias = "l", default)]
+    pub filled_qty: Option<Decimal>,
     #[serde(alias = "z")]
     pub executed_qty: Decimal,
     #[serde(alias = "Z")]
     pub exec_qty_in_quote: Decimal,
-    #[serde(alias = "L")]
-    pub filled_price: Decimal,
-    #[serde(alias = "m")]
-    pub is_maker: bool,
-    #[serde(alias = "n")]
-    pub fee: Decimal,
-    #[serde(alias = "N")]
-    pub fee_symbol: String,
+    #[serde(alias = "L", default)]
+    pub filled_price: Option<Decimal>,
+    #[serde(alias = "m", default)]
+    pub is_maker: Option<bool>,
+    #[serde(alias = "n", default)]
+    pub fee: Option<Decimal>,
+    #[serde(alias = "N", default)]
+    pub fee_symbol: Option<String>,
     #[serde(alias = "V")]
     pub self_trade_prevention: SelfTradePrevention,
     #[serde(alias = "T")]
@@ -70,7 +71,7 @@ pub enum PublicEvent {
     Depth,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct TraderStream {
     #[serde(alias = "e")]
     pub event: PublicEvent,
@@ -94,7 +95,7 @@ pub struct TraderStream {
     pub is_buyer_maker: bool,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DepthStream {
     #[serde(alias = "e")]
     pub event: PublicEvent,
@@ -120,4 +121,32 @@ pub enum WsStream {
     Depth(DepthStream),
     OrderUpdate(OrderUpdateStream),
     Trader(TraderStream),
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_order_stream() {
+        let s = r#" {
+          "E": 1708179184507397,
+          "S": "Bid",
+          "T": 1708179184507017,
+          "V": "RejectTaker",
+          "X": "New",
+          "Z": "0",
+          "e": "orderAccepted",
+          "f": "GTC",
+          "i": "111947231035785216",
+          "o": "LIMIT",
+          "p": "106.84",
+          "q": "0.03",
+          "s": "SOL_USDC",
+          "z": "0"
+        }"#;
+        let stream: Result<OrderUpdateStream, _> = serde_json::from_str(s);
+        println!("{stream:?}");
+        assert!(stream.is_ok());
+    }
 }

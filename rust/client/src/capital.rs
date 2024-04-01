@@ -66,8 +66,8 @@ mod test {
 
     #[tokio::test]
     async fn test_get_balances() {
-        let api_key = "";
-        let secret_key = "";
+        let api_key = "fNWHGh50EEcZi29P0D04M0wN/Qvui0Lhcb4RdLk56bM=";
+        let secret_key = "zKyQqe2LS0aEyxD3X+/Xt5yRmQdnpG55L4FaYrRezgM=";
         let client = BpxClient::init(api_key, secret_key).unwrap();
         let balances = client.get_balances().await.unwrap();
         println!("{balances:?}");
